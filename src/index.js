@@ -29,7 +29,7 @@ async function autoScroll(page) {
 }
 
 const run = async () => {
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({ headless: true, devtools: false });
   const page = await browser.newPage();
   // 设置 cookie，后续应该由接口传入
   await page.setCookie({
@@ -46,13 +46,34 @@ const run = async () => {
 
   await page.waitForNavigation({
     waitUntil: "load",
-    timeout: 3000
+    timeout: 30000
   })
 
- await page.waitForSelector('.react-grid-layout')
+  await page.waitForSelector('.react-grid-layout')
   // 自动滚动触发懒加载
   await autoScroll(page);
-  await sleep(2000);
+
+  const pageRendered = page.evaluate(() => {
+    return new Promise(resolve => {
+      const observeDom = document.getElementsByClassName('react-grid-layout')[0]
+      const observer = new MutationObserver(() => {
+        const componentList = observeDom
+        if (componentList && componentList.children && componentList.children.length) {
+          observer.disconnect();
+          console.log('canvas resolve')
+          resolve()
+        }
+      });
+      observer.observe(observeDom, {
+        attributes: false,
+        childList: true,
+        subtree: true
+      });
+    })
+  })
+
+  const timePromise = sleep(10000);
+  await Promise.race([pageRendered, timePromise]);
 
   const dimensions = await page.evaluate(() => {
     const dom = document.querySelector('.index_canvas_1TQUT')
