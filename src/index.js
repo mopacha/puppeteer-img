@@ -1,6 +1,9 @@
 const puppeteer = require('puppeteer');
 const loginCookie = 'Yb11EAkEUV9bfEdV5503eRrYiL8qCQLm2k03tHrr8Fg2mqr2OUJzE6X6se6cHSbdbdb5jGHInT0qJUPVzWCt1hjwkA7h0I2HCgF5UA1XZFxrnAXCnPZgH4Wf1BotoY1l'
 
+
+const sleep = time => new Promise(resolve => setTimeout(resolve, time))
+
 // 右边区域页面滚动到底，再截图
 async function autoScroll(page) {
   return page.evaluate(() => {
@@ -46,10 +49,10 @@ const run = async () => {
     timeout: 3000
   })
 
-  //  TODO  等待首屏加载完成 
-  await page.waitForSelector('.react-grid-layout')
+ await page.waitForSelector('.react-grid-layout')
   // 自动滚动触发懒加载
-  await autoScroll(page)
+  await autoScroll(page);
+  await sleep(2000);
 
   const dimensions = await page.evaluate(() => {
     const dom = document.querySelector('.index_canvas_1TQUT')
