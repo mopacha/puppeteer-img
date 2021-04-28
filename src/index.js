@@ -1,5 +1,7 @@
 const puppeteer = require('puppeteer');
-const loginCookie = 'Yb11EAkEUV9bfEdV5503eRrYiL8qCQLm2k03tHrr8Fg2mqr2OUJzE6X6se6cHSbdbdb5jGHInT0qJUPVzWCt1hjwkA7h0I2HCgF5UA1XZFxrnAXCnPZgH4Wf1BotoY1l'
+const options = process.argv;
+// let pageUrl = 'http://10.120.184.99:8107/sa/report/?project=default&id=55'
+// let cookie = 'Ab2Un3rH9Ir0xFYNOXY2f1xABXhcAbGwrFMmLDpDCdbTSfTISeiLJiEdFeaEhI3k6NMhQJdwvuhjWWGWEl4UPhrhOt1yMVbxuLoTy6mNsux15YsQPQkfX2eNvGeqT4fd'
 
 const sleep = time => new Promise(resolve => setTimeout(resolve, time))
 
@@ -28,15 +30,24 @@ async function autoScroll(page) {
 }
 
 const run = async () => {
+  let pageUrl
+  let cookie
+
+  if (options.length >= 4) {
+    pageUrl = options[2];
+    cookie = options[3];
+  }
+
   const browser = await puppeteer.launch({ headless: true, devtools: false });
   const page = await browser.newPage();
   // 设置 cookie，后续应该由接口传入
   await page.setCookie({
-    url: "http://10.120.184.99:8107",
+    url: pageUrl,
     name: 'sensorsdata-token',
-    value: loginCookie
+    value: cookie
   })
-  await page.goto('http://10.120.184.99:8107/sa/report/?project=default&id=55');
+
+  await page.goto(pageUrl);
   // 设置tab页的尺寸，puppeteer允许对每个tab页单独设置尺寸
   await page.setViewport({
     width: 1920,
