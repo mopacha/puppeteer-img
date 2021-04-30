@@ -113,7 +113,7 @@ const run = async () => {
     const dom = document.querySelector('.index_canvas_2n93K')
     return {
       width: dom.scrollWidth,
-      height: dom.scrollHeight + 300,
+      height: dom.scrollHeight + 100, // 加100 高度，保证截全
       deviceScaleFactor: window.devicePixelRatio
     };
   });
@@ -121,18 +121,33 @@ const run = async () => {
   await page.setViewport(dimensions);
   // 只截图图表区域
   const body = await page.$('.index_canvas_2n93K')
-
   await sleep(5000)
 
+  // todo 删除  index_globalFilters_2eHJm
+  await page.evaluate(() => {
+    const filterDom = document.querySelector('.index_globalFilters_2eHJm')
+    // 删除过滤dom
+    filterDom.parentNode.removeChild(filterDom);
+
+  })
+
+
   if (fileType === 'image') {
-    await body.screenshot({ path: fileName + '.png' });
+    await body.screenshot({
+      path: fileName + '.png', clip: {
+        x: 0,
+        y: 0,
+        width: dimensions.width,
+        height: dimensions.height
+      }
+    });
   } else {
     await page.pdf({ path: 'html-page.pdf', width: dimensions.width, height: dimensions.height });
   }
 
   await browser.close();
   //process.stdout.write(imgStream);
-  console.log('end')
+  console.log('finish and success')
 }
 
 run()
