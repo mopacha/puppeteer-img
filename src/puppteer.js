@@ -14,7 +14,7 @@ async function autoScroll(page) {
       // 每次向下滚动 200px
       const distance = 200
       const timer = setInterval(() => {
-        const dom = document.querySelector('.index_canvas_1TQUT')
+        const dom = document.querySelector('.index_canvas_2n93K')
         // 截图区域(需要一个固定的 id 或 class)滚动高度
         const scrollHeight = dom.scrollHeight
         // 滚动条向下滚动 distance
@@ -35,14 +35,15 @@ const run = async () => {
   let cookie
   let fileName
 
-  if (options.length >= 5) {
+  if (options.length >= 6) {
     pageUrl = options[2];
     cookie = options[3];
     fileName = options[4];
+    fileType = options[5];
   }
 
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
     devtools: false
   });
 
@@ -109,7 +110,7 @@ const run = async () => {
 
   // 页面加载完成之后获取某个dom的宽度和高度
   const dimensions = await page.evaluate(() => {
-    const dom = document.querySelector('.index_canvas_1TQUT')
+    const dom = document.querySelector('.index_canvas_2n93K')
     return {
       width: dom.scrollWidth,
       height: dom.scrollHeight + 300,
@@ -119,13 +120,19 @@ const run = async () => {
   // 设置页面分辨率
   await page.setViewport(dimensions);
   // 只截图图表区域
-  const body = await page.$('.index_canvas_1TQUT')
+  const body = await page.$('.index_canvas_2n93K')
 
   await sleep(5000)
 
-  const imgStream = await body.screenshot({ path: fileName + '.png' });
+  if (fileType === 'image') {
+    await body.screenshot({ path: fileName + '.png' });
+  } else {
+    await page.pdf({ path: 'html-page.pdf', width: dimensions.width, height: dimensions.height });
+  }
+
   await browser.close();
-  process.stdout.write(imgStream);
+  //process.stdout.write(imgStream);
+  console.log('end')
 }
 
 run()
