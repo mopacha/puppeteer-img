@@ -4,12 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "mini": "uglifyjs src/index.js -o lib/index.min.js -c -m"
+    "build": "rm -rf dist"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "puppeteer": "^8.0.0",
-    "uglify-js": "^3.13.4"
+    "puppeteer": "^8.0.0"
   }
 }

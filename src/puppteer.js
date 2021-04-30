@@ -17,9 +17,10 @@ async function autoScroll(page) {
         const dom = document.querySelector('.index_canvas_1TQUT')
         // 截图区域(需要一个固定的 id 或 class)滚动高度
         const scrollHeight = dom.scrollHeight
-        // 滚动条滚动 distance
+        // 滚动条向下滚动 distance
         dom.scrollBy(0, distance)
         totalHeight += distance
+        // 当滚动的总高度 大于截图区域高度，说明滚动到底了
         if (totalHeight >= scrollHeight) {
           clearInterval(timer)
           resolve()
@@ -32,14 +33,36 @@ async function autoScroll(page) {
 const run = async () => {
   let pageUrl
   let cookie
+  let fileName
 
-  if (options.length >= 4) {
+  if (options.length >= 5) {
     pageUrl = options[2];
     cookie = options[3];
+    fileName = options[4];
   }
 
-  const browser = await puppeteer.launch({ headless: true, devtools: false });
+  const browser = await puppeteer.launch({
+    headless: false,
+    devtools: false
+  });
+
   const page = await browser.newPage();
+  // await page.setRequestInterception(true);
+
+  // 请求拦截  参考：https://github.com/puppeteer/puppeteer/blob/main/docs/api.md#pagesetrequestinterceptionenabledvalue
+  // 一旦启用了请求拦截，每个请求都将停止，除非它继续、响应或中止
+  // page.on('request', (interceptedRequest) => {
+  //   if (
+  //     interceptedRequest.url().endsWith('query')
+  //   ){
+  //    // interceptedRequest.abort();
+  //    console.log(  interceptedRequest.url())
+
+  //   }
+  //   interceptedRequest.continue();
+  //   // else interceptedRequest.continue();
+  // });
+
   // 设置 cookie，后续应该由接口传入
   await page.setCookie({
     url: pageUrl,
@@ -47,44 +70,44 @@ const run = async () => {
     value: cookie
   })
 
-  await page.goto(pageUrl);
+  await page.goto(pageUrl)
   // 设置tab页的尺寸，puppeteer允许对每个tab页单独设置尺寸
   await page.setViewport({
     width: 1920,
     height: 1080
   });
 
-  await page.waitForNavigation({
-    waitUntil: "load",
-    timeout: 30000
+  // 等待layout元素加载之后
+  await page.waitForSelector('.react-grid-layout', {
+    timeout: 120 * 1000
   })
 
-  await page.waitForSelector('.react-grid-layout')
   // 自动滚动触发懒加载
   await autoScroll(page);
 
+  // 判断所有组件的轮廓加载完成，完成后就可以获取要截图的页面的高度，从而设置截图的高度
   const pageRendered = page.evaluate(() => {
-    return new Promise(resolve => {
-      const observeDom = document.getElementsByClassName('react-grid-layout')[0]
-      const observer = new MutationObserver(() => {
-        const componentList = observeDom
-        if (componentList && componentList.children && componentList.children.length) {
-          observer.disconnect();
-          console.log('canvas resolve')
-          resolve()
-        }
-      });
-      observer.observe(observeDom, {
-        attributes: false,
-        childList: true,
-        subtree: true
-      });
-    })
+    const observeDom = document.getElementsByClassName('react-grid-layout')[0]
+    const observer = new MutationObserver(() => {
+      const componentList = observeDom
+      if (componentList && componentList.children && componentList.children.length) {
+        observer.disconnect();
+        console.log('canvas resolve')
+        return Promise.resolve()
+      }
+    });
+    observer.observe(observeDom, {
+      attributes: false,
+      childList: true,
+      subtree: true
+    });
   })
 
-  const timePromise = sleep(10000);
+  const timePromise = sleep(30 * 1000);
+
   await Promise.race([pageRendered, timePromise]);
 
+  // 页面加载完成之后获取某个dom的宽度和高度
   const dimensions = await page.evaluate(() => {
     const dom = document.querySelector('.index_canvas_1TQUT')
     return {
@@ -93,11 +116,16 @@ const run = async () => {
       deviceScaleFactor: window.devicePixelRatio
     };
   });
+  // 设置页面分辨率
   await page.setViewport(dimensions);
   // 只截图图表区域
   const body = await page.$('.index_canvas_1TQUT')
-  await body.screenshot({ path: 'example.png' });
+
+  await sleep(5000)
+
+  const imgStream = await body.screenshot({ path: fileName + '.png' });
   await browser.close();
+  process.stdout.write(imgStream);
 }
 
 run()
