@@ -1,8 +1,5 @@
 const puppeteer = require('puppeteer');
 const options = process.argv;
-// let pageUrl = 'http://10.120.184.99:8107/sa/report/?project=default&id=55'
-// let cookie = 'Ab2Un3rH9Ir0xFYNOXY2f1xABXhcAbGwrFMmLDpDCdbTSfTISeiLJiEdFeaEhI3k6NMhQJdwvuhjWWGWEl4UPhrhOt1yMVbxuLoTy6mNsux15YsQPQkfX2eNvGeqT4fd'
-
 const sleep = time => new Promise(resolve => setTimeout(resolve, time))
 
 // 右边区域页面滚动到底，再截图
@@ -30,26 +27,25 @@ async function autoScroll(page) {
   })
 }
 
-const run = async () => {
+const screenshot = async () => {
   let pageUrl
   let cookie
-  let fileName
-
-  if (options.length >= 6) {
+  let filePath
+  if (options.length >= 5) {
     pageUrl = options[2];
     cookie = options[3];
-    fileName = options[4];
-    fileType = options[5];
+    filePath = options[4];
   }
 
+  let fileType = filePath.indexOf('.png') > -1 ? 'image' : 'pdf'
   const browser = await puppeteer.launch({
     headless: true,
     devtools: false
   });
 
   const page = await browser.newPage();
-  // await page.setRequestInterception(true);
 
+  // await page.setRequestInterception(true);
   // 请求拦截  参考：https://github.com/puppeteer/puppeteer/blob/main/docs/api.md#pagesetrequestinterceptionenabledvalue
   // 一旦启用了请求拦截，每个请求都将停止，除非它继续、响应或中止
   // page.on('request', (interceptedRequest) => {
@@ -63,6 +59,7 @@ const run = async () => {
   //   interceptedRequest.continue();
   //   // else interceptedRequest.continue();
   // });
+
 
   // 设置 cookie，后续应该由接口传入
   await page.setCookie({
@@ -80,7 +77,7 @@ const run = async () => {
 
   // 等待layout元素加载之后
   await page.waitForSelector('.react-grid-layout', {
-    timeout: 120 * 1000
+    timeout: 60 * 1000
   })
 
   // 自动滚动触发懒加载
@@ -126,15 +123,17 @@ const run = async () => {
   // todo 删除  index_globalFilters_2eHJm
   await page.evaluate(() => {
     const filterDom = document.querySelector('.index_globalFilters_2eHJm')
+    const exitbtnDom = document.querySelector('.index_exitFullscreen_oBMlN')
     // 删除过滤dom
     filterDom.parentNode.removeChild(filterDom);
-
+    // 删除退出全屏按钮
+    exitbtnDom.parentNode.removeChild(exitbtnDom);
   })
 
 
   if (fileType === 'image') {
     await body.screenshot({
-      path: fileName + '.png', clip: {
+      path: filePath, clip: {
         x: 0,
         y: 0,
         width: dimensions.width,
@@ -142,14 +141,23 @@ const run = async () => {
       }
     });
   } else {
-    await page.pdf({ path: 'html-page.pdf', width: dimensions.width, height: dimensions.height });
+    await page.pdf({ path: filePath, width: dimensions.width, height: dimensions.height });
   }
 
   await browser.close();
   //process.stdout.write(imgStream);
   console.log('finish and success')
+  process.exit(0);
 }
 
-run()
+(async () => {
+  try {
+    await screenshot()
+  } catch (error) {
+    console.log('error')
+    // 终止当前进程并返回给定的 code
+    process.exit(1);
+  }
+})()
 
 
