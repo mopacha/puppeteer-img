@@ -9,9 +9,12 @@ async function autoScroll(page) {
       // 滚动总高度
       let totalHeight = 0;
       // 每次向下滚动 200px
-      const distance = 200
+      const distance = 200;
+      const dom = document.querySelector('.index_canvas_2n93K')
+      if (!dom) {
+        reject()
+      }
       const timer = setInterval(() => {
-        const dom = document.querySelector('.index_canvas_2n93K')
         // 截图区域(需要一个固定的 id 或 class)滚动高度
         const scrollHeight = dom.scrollHeight
         // 滚动条向下滚动 distance
@@ -146,7 +149,7 @@ const screenshot = async () => {
 
   await browser.close();
   //process.stdout.write(imgStream);
-  console.log('finish and success')
+  console.log('success')
   process.exit(0);
 }
 
