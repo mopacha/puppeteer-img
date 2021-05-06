@@ -4,11 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rm -rf dist"
+    "build": "rm -rf dist &&  webpack --config webpack.config.js --mode=production"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "puppeteer": "^8.0.0"
+    "bufferutil": "^4.0.3",
+    "puppeteer": "^8.0.0",
+    "utf-8-validate": "^5.0.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.14.0",
+    "@babel/preset-env": "^7.14.1",
+    "babel-loader": "^8.2.2",
+    "webpack": "^5.36.2",
+    "webpack-cli": "^4.6.0"
   }
 }
