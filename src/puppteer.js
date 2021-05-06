@@ -12,7 +12,7 @@ async function autoScroll(page) {
       const distance = 200;
       const dom = document.querySelector('.index_canvas_2n93K')
       if (!dom) {
-        reject()
+        reject('no dom querySelector')
       }
       const timer = setInterval(() => {
         // 截图区域(需要一个固定的 id 或 class)滚动高度
@@ -123,7 +123,7 @@ const screenshot = async () => {
   const body = await page.$('.index_canvas_2n93K')
   await sleep(5000)
 
-  // todo 删除  index_globalFilters_2eHJm
+  // 删除页面dom 元素
   await page.evaluate(() => {
     const filterDom = document.querySelector('.index_globalFilters_2eHJm')
     const exitbtnDom = document.querySelector('.index_exitFullscreen_oBMlN')
@@ -157,7 +157,7 @@ const screenshot = async () => {
   try {
     await screenshot()
   } catch (error) {
-    console.log('error')
+    console.log('error',error)
     // 终止当前进程并返回给定的 code
     process.exit(1);
   }
